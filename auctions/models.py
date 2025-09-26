@@ -8,7 +8,7 @@ class User(AbstractUser):
     pass
 
     def __str__(self):
-        return f"name: {self.first_name} {self.last_name}".strip()
+        return f"name: {self.username}".strip()
 
 class Listing(models.Model):
     title = models.CharField(max_length=100)
