@@ -3,5 +3,20 @@
 {% block body %}
     <h2>Active Listings</h2>
 
-    TODO
+    <ul>
+        {% for item in listings %}
+            <li class="card mb-3">
+                <div class="row g-0">
+                    <img src='media/{{ item.image }}' class="img-fluid rounded-start">
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title"> {{item.title }}</h5>
+                            <p class="card-text"><b>Price:</b> ${{item.current_price}}</p>
+                            <p class="card-text"><small class="text-body-secondary" style="color: grey;"> created at: {{item.created_at}}</small></p>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>>
 {% endblock %}
