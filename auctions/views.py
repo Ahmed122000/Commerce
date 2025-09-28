@@ -8,7 +8,11 @@ from .models import User, Listing, Category
 
 
 def index(request):
-    return render(request, "auctions/index.html", {'header': "Active Listings", 'listings':Listing.objects.all()})
+    return render(request, "auctions/index.html", {
+        'header': "Active Listings", 
+        'listings':Listing.objects.filter(active=True)
+        }
+    )
 
 
 def login_view(request):
@@ -29,6 +33,7 @@ def login_view(request):
             })
     else:
         return render(request, "auctions/login.html")
+
 
 
 def logout_view(request):
@@ -63,12 +68,11 @@ def register(request):
         return render(request, "auctions/register.html")
 
 
+
 def add_new_listing(request):
     if request.method == "POST":
         form = ListingForm(request.POST, request.FILES)
         if form.is_valid():
-            print(request.POST)
-            print(request.FILES)
             listing = form.save(commit=False)
             listing.owner = request.user
             listing.current_price = listing.starting_bid
@@ -76,7 +80,10 @@ def add_new_listing(request):
             form.save_m2m()
             return HttpResponseRedirect(reverse('index'))
         else:
-            return render(request, 'auctions/new_listing.html', {'form':form})
+            return render(request, 'auctions/new_listing.html', {
+                'form':form
+                }
+            )
     else: 
         return render(request, 'auctions/new_listing.html', {
             "form": ListingForm()
@@ -84,10 +91,25 @@ def add_new_listing(request):
     
 
 def categories(request):
-    return render(request, 'auctions/categories.html', {'categories': Category.objects.all()})
+    return render(request, 'auctions/categories.html', {
+        'categories': Category.objects.all()
+        }
+    )
 
 def list_category(request, category):
-    return render(request, "auctions/index.html", {'header': category, 'listings':Listing.objects.filter(category__name = category)})
+    return render(request, "auctions/index.html", {
+        'header': category, 
+        'listings':Listing.objects.filter(category__name = category, active=True)
+        }
+    )
+
+
 
 def watchlist(request):
-    pass
+    if not request.user.is_authenticated:
+        return render(request, 'auctions/login.html')
+    
+    return render(request, 'auctions/index.html', {
+        'header':"watchlist", 
+        "listings": request.user.watchlist_listings.filter(active=True)
+    })
