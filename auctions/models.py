@@ -5,18 +5,22 @@ from django.utils import timezone
 
 
 class User(AbstractUser):
-    pass
-
     def __str__(self):
         return f"name: {self.username}".strip()
 
+class Category(models.Model):
+    name = models.CharField(max_length=50, unique=True, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name}"
+    
 class Listing(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     starting_bid = models.DecimalField(max_digits=10, decimal_places=2)
     current_price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to='auctions/', blank=True, null=True)
-    category = models.CharField(max_length=50, blank=True)
+    image = models.ImageField(upload_to='listing_images/', blank=True, null=True)
+    category = models.ManyToManyField(Category, blank=True, related_name='listings')
     created_at = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField()
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings') 
@@ -31,6 +35,9 @@ class Listing(models.Model):
             self.current_price = self.starting_bid
         super().save(*args, **kwargs)
 
+    @property
+    def highest_bid(self):
+        return self.bids.order_by('-amount').first()
 
 class Bid(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -38,15 +45,28 @@ class Bid(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="bids")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-amount']
+
     def __str__(self):
         return f"${self.amount} on {self.listing} by  {self.bidder.username}"
 
+
+    def save(self, *args, **kwargs):
+        super.save(*args, **kwargs)
+        if self.amound > self.listing.current_price:
+            self.listing.current_price = self.amount
+            self.listing.save()
 
 class Comment(models.Model):
     content = models.TextField(max_length=500)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="comments")
-    created_at = models.TimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta: 
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"comment by {self.author.username} on {self.listing.title}"
+

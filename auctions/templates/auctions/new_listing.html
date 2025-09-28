@@ -1,0 +1,64 @@
+{% extends "auctions/layout.html" %}
+
+{% block title %}
+    Add New Item
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Add New Listing</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'new_listing' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_title" class="form-label">Title</label>
+                            {{ form.title }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_starting_bid" class="form-label">Starting Bid ($)</label>
+                            {{ form.starting_bid }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_image" class="form-label">Image</label>
+                            {{ form.image }}
+                            <div class="form-text">Optional: Upload an image for your listing</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Categories</label>
+                            <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                {{ form.category }}
+                            </div>
+                            <div class="form-text">Select one or more categories</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_end_time" class="form-label">Auction End Time</label>
+                            {{ form.end_time }}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Create Listing</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
