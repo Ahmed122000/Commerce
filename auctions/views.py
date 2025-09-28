@@ -3,12 +3,12 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-
-from .models import User
+from .forms import ListingForm
+from .models import User, Listing, Category
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    return render(request, "auctions/index.html", {'header': "Active Listings", 'listings':Listing.objects.all()})
 
 
 def login_view(request):
@@ -61,3 +61,33 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
+
+
+def add_new_listing(request):
+    if request.method == "POST":
+        form = ListingForm(request.POST, request.FILES)
+        if form.is_valid():
+            print(request.POST)
+            print(request.FILES)
+            listing = form.save(commit=False)
+            listing.owner = request.user
+            listing.current_price = listing.starting_bid
+            listing.save()
+            form.save_m2m()
+            return HttpResponseRedirect(reverse('index'))
+        else:
+            return render(request, 'auctions/new_listing.html', {'form':form})
+    else: 
+        return render(request, 'auctions/new_listing.html', {
+            "form": ListingForm()
+        })
+    
+
+def categories(request):
+    return render(request, 'auctions/categories.html', {'categories': Category.objects.all()})
+
+def list_category(request, category):
+    return render(request, "auctions/index.html", {'header': category, 'listings':Listing.objects.filter(category__name = category)})
+
+def watchlist(request):
+    pass

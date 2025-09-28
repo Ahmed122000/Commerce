@@ -1,13 +1,14 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h2>Active Listings</h2>
+    <h2>{{ header }}</h2>
 
     <ul>
+        {% if listings|length > 0 %}
         {% for item in listings %}
             <li class="card mb-3">
                 <div class="row g-0">
-                    <img src='media/{{ item.image }}' class="img-fluid rounded-start" width="200px">
+                    <img src='{{ item.image.url }}' class="img-fluid rounded-start" width="200px">
                     <div class="col-md-8">
                         <div class="card-body">
                             <h5 class="card-title"> {{item.title }}</h5>
@@ -19,5 +20,8 @@
                 </div>
             </li>
         {% endfor %}
-    </ul>>
+        {% else %}
+            <h3>No items Found </h3>
+        {%endif%}
+    </ul>
 {% endblock %}
