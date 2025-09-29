@@ -7,6 +7,7 @@
         {% if listings|length > 0 %}
         {% for item in listings %}
             <li class="card mb-3">
+                <a href="{% url 'item' item.id %}">
                 <div class="row g-0">
                     <img src='{{ item.image.url }}' class="img-fluid rounded-start" width="200px">
                     <div class="col-md-8">
@@ -18,6 +19,7 @@
                         </div>
                     </div>
                 </div>
+                </a>
             </li>
         {% endfor %}
         {% else %}

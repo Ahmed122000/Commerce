@@ -1,19 +1,31 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from .forms import ListingForm
 from .models import User, Listing, Category
 
 
+def get_active_listings(items):
+    active = [listing for listing in items if listing.is_active]
+
+    return active 
+
 def index(request):
     return render(request, "auctions/index.html", {
         'header': "Active Listings", 
-        'listings':Listing.objects.filter(active=True)
+        'listings':get_active_listings(Listing.objects.all())
         }
     )
 
+def get_item(request, id):
+    item = Listing.objects.get(id=id)
+    print(item)
+    return render(request, "auctions/item.html", {
+        "listing": item
+    })
 
 def login_view(request):
     if request.method == "POST":
@@ -68,7 +80,7 @@ def register(request):
         return render(request, "auctions/register.html")
 
 
-
+@login_required
 def add_new_listing(request):
     if request.method == "POST":
         form = ListingForm(request.POST, request.FILES)
@@ -89,7 +101,7 @@ def add_new_listing(request):
             "form": ListingForm()
         })
     
-
+@login_required
 def categories(request):
     return render(request, 'auctions/categories.html', {
         'categories': Category.objects.all()
@@ -99,17 +111,17 @@ def categories(request):
 def list_category(request, category):
     return render(request, "auctions/index.html", {
         'header': category, 
-        'listings':Listing.objects.filter(category__name = category, active=True)
+        'listings':Listing.objects.filter(category__name = category)
         }
     )
 
 
-
+@login_required
 def watchlist(request):
     if not request.user.is_authenticated:
         return render(request, 'auctions/login.html')
     
     return render(request, 'auctions/index.html', {
         'header':"watchlist", 
-        "listings": request.user.watchlist_listings.filter(active=True)
+        "listings": request.user.watchlist_listings.all()
     })

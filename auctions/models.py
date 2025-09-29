@@ -24,7 +24,6 @@ class Listing(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField()
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings') 
-    active = models.BooleanField(default=True)
     watchers = models.ManyToManyField(User, blank=True, related_name="watchlist_listings")
 
     def __str__(self):
@@ -38,6 +37,11 @@ class Listing(models.Model):
     @property
     def highest_bid(self):
         return self.bids.order_by('-amount').first()
+    
+    @property
+    def is_active(self):
+        return self.end_time > timezone.now()
+            
 
 class Bid(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
