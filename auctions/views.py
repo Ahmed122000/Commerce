@@ -6,12 +6,8 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from .forms import ListingForm
 from .models import User, Listing, Category
+from .utils import get_active_listings
 
-
-def get_active_listings(items):
-    active = [listing for listing in items if listing.is_active]
-
-    return active 
 
 def index(request):
     return render(request, "auctions/index.html", {
@@ -22,7 +18,6 @@ def index(request):
 
 def get_item(request, id):
     item = Listing.objects.get(id=id)
-    print(item)
     return render(request, "auctions/item.html", {
         "listing": item
     })
