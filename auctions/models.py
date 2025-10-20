@@ -18,12 +18,13 @@ class Listing(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     starting_bid = models.DecimalField(max_digits=10, decimal_places=2)
-    current_price = models.DecimalField(max_digits=10, decimal_places=2)
+    current_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     image = models.ImageField(upload_to='listing_images/', blank=True, null=True)
     category = models.ManyToManyField(Category, blank=True, related_name='listings')
     created_at = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField()
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings') 
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_listings")
     watchers = models.ManyToManyField(User, blank=True, related_name="watchlist_listings")
 
     def __str__(self):
@@ -57,8 +58,8 @@ class Bid(models.Model):
 
 
     def save(self, *args, **kwargs):
-        super.save(*args, **kwargs)
-        if self.amound > self.listing.current_price:
+        super().save(*args, **kwargs)
+        if self.amount > self.listing.current_price:
             self.listing.current_price = self.amount
             self.listing.save()
 
