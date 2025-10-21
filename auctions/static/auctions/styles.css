@@ -11,3 +11,18 @@ body {
 textarea.form-control {
     min-height: 120px;
 }
+
+.listing-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid #e9ecef;
+}
+.listing-card:hover {
+    transform: translateY(-2px);
+}
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+.card-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
