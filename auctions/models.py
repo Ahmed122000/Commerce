@@ -26,7 +26,7 @@ class Listing(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings') 
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_listings")
     watchers = models.ManyToManyField(User, blank=True, related_name="watchlist_listings")
-
+    
     def __str__(self):
         return f"{self.title} (${self.current_price})"
     
