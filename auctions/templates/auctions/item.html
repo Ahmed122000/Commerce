@@ -6,63 +6,90 @@
         <div class="col-lg-8 mx-auto">
             <!-- Header Section -->
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="mb-0">{{ listing.title }}</h2>
-                <div>
+                <h1 class="h2 mb-0">{{ listing.title }}</h1>
+                <div class="d-flex gap-2 align-items-center">
                     {% if not listing.is_active %}
-                    <span class="badge bg-danger fs-6 me-2">
+                    <span class="badge bg-danger fs-6">
                         <i class="bi bi-clock-history"></i> Auction Ended
                     </span>
                     {% endif %}
-                    {% if watch_list %}
+                    {% if user.is_authenticated and watch_list %}
                     <span class="badge bg-warning text-dark fs-6">
                         <i class="bi bi-bookmark-check"></i> In Watchlist
                     </span>
                     {% endif %}
-                    {% if is_owner and listing.is_active %}
-                    <form method="post" action="{% url 'end_auction' %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="item_id" value="{{ listing.id }}">
-                        <button type="submit">
-                            End Auction
-                        </button>
-                    </form>
-                    {% endif %}
                 </div>
             </div>
 
-            <!-- Image Section -->
-            {% if listing.image %}
-            <div class="card mb-4 border-0">
-                <div class="card-body p-0">
-                    <img src="{{ listing.image.url }}" class="img-fluid rounded-3 w-100 shadow-sm" alt="{{ listing.title }}" style="max-height: 500px; object-fit: cover;">
-                </div>
-            </div>
-            <div>
-                <form method="post" action="{% url 'toggle_watchlist' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="item_id" value="{{ listing.id }}">
-                    <button type="submit">
-                        {% if watch_list %}
-                            Remove from Watchlist
+            <!-- Image and Actions Section -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card border-0 shadow-sm">
+                        {% if listing.image %}
+                        <img src="{{ listing.image.url }}" class="card-img-top rounded" alt="{{ listing.title }}" style="max-height: 400px; object-fit: cover;">
                         {% else %}
-                            Add to Watchlist
+                        <div class="card-body text-center py-5 bg-light">
+                            <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                            <p class="text-muted mt-2 mb-0">No image available</p>
+                        </div>
                         {% endif %}
-                    </button>
-                </form>
-            </div>
-            {% else %}
-            <div class="card mb-4 border-0">
-                <div class="card-body text-center py-5 bg-light rounded-3">
-                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
-                    <p class="text-muted mt-2 mb-0">No image available</p>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons Sidebar -->
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Actions</h5>
+                            
+                            <!-- Watchlist Toggle -->
+                            {% if user.is_authenticated %}
+                            <form method="post" action="{% url 'toggle_watchlist' %}" class="mb-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="item_id" value="{{ listing.id }}">
+                                <button type="submit" class="btn {% if watch_list %}btn-outline-warning{% else %}btn-warning{% endif %} w-100 mb-2">
+                                    <i class="bi bi-bookmark{% if watch_list %}-check{% endif %}"></i>
+                                    {% if watch_list %}
+                                        Remove from Watchlist
+                                    {% else %}
+                                        Add to Watchlist
+                                    {% endif %}
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            <!-- Close Auction (Owner Only) -->
+                            {% if user.is_authenticated and is_owner and listing.is_active %}
+                            <form method="post" action="{% url 'end_auction' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="item_id" value="{{ listing.id }}">
+                                <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Are you sure you want to end this auction? This action cannot be undone.')">
+                                    <i class="bi bi-hourglass-top"></i> End Auction
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            <!-- Winner Message -->
+                            {% if not listing.is_active and listing.winner %}
+                            <div class="alert alert-success mt-3">
+                                <i class="bi bi-trophy"></i>
+                                <strong>Auction Won by {{ listing.winner.username }}</strong>
+                                {% if user == listing.winner %}
+                                <p class="mb-0 mt-1">Congratulations! You won this auction.</p>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
-            {% endif %}
 
             <!-- Description Section -->
             <div class="card mb-4 shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title text-primary">Description</h5>
+                    <h3 class="card-title h5 text-primary">
+                        <i class="bi bi-text-paragraph"></i> Description
+                    </h3>
                     <p class="card-text fs-6 lh-base">{{ listing.description|linebreaksbr }}</p>
                 </div>
             </div>
@@ -72,30 +99,54 @@
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <h4 class="text-primary mb-0">${{ listing.current_price }}</h4>
-                            <small class="text-muted">
-                                {% if listing.is_active %}Current {% else %}Final {% endif %}Price
-                                {% if not listing.is_active and listing.winner %}
-                                • Won by {{ listing.winner.username }}
+                            <h2 class="text-primary mb-1">${{ listing.current_price }}</h2>
+                            <p class="text-muted mb-0">
+                                {% if listing.is_active %}
+                                    Current Price
+                                    <small class="d-block">Starting bid: ${{ listing.starting_bid }}</small>
+                                {% else %}
+                                    Final Price
+                                    {% if listing.winner %}
+                                    <small class="d-block">Won by {{ listing.winner.username }}</small>
+                                    {% endif %}
                                 {% endif %}
-                            </small>
+                            </p>
                         </div>
                         <div class="col-md-6">
-                            {% if listing.is_active %}
-                            <form method="post" action="{% url 'place_bid' listing.id %}" class="mt-3 mt-md-0">
+                            {% if listing.is_active and user.is_authenticated and not is_owner %}
+                            <form method="post" action="{% url 'place_bid' listing.id %}">
                                 {% csrf_token %}
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" name="bid_amount" class="form-control" placeholder="Enter your bid" min="{{ listing.current_price|add:'1' }}" step="0.01" required>
-                                    <button type="submit" class="btn btn-primary px-4">Place Bid</button>
+                                <div class="mb-3">
+                                    <label for="bidAmount" class="form-label">Enter Your Bid</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" name="bid_amount" class="form-control" id="bidAmount" 
+                                               placeholder="Enter your bid" min="{{ listing.current_price|add:'1' }}" 
+                                               step="0.01" required>
+                                    </div>
+                                    <div class="form-text">
+                                        Minimum bid: ${{ listing.current_price|add:"1" }}
+                                    </div>
                                 </div>
-                                <small class="form-text text-muted">Bid must be higher than ${{ listing.current_price }}</small>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-hammer"></i> Place Bid
+                                </button>
                             </form>
-                            {% else %}
+                            {% elif not listing.is_active %}
                             <div class="text-center py-3">
                                 <i class="bi bi-x-circle-fill text-danger" style="font-size: 2rem;"></i>
                                 <h5 class="text-danger mt-2">Auction Ended</h5>
                                 <p class="text-muted mb-0">This listing is no longer accepting bids</p>
+                            </div>
+                            {% elif is_owner %}
+                            <div class="alert alert-info text-center">
+                                <i class="bi bi-info-circle"></i>
+                                <p class="mb-0">This is your listing. You cannot place bids on your own auction.</p>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning text-center">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <p class="mb-0">Please <a href="{% url 'login' %}">login</a> to place a bid.</p>
                             </div>
                             {% endif %}
                         </div>
@@ -104,36 +155,104 @@
             </div>
 
             <!-- Details Section -->
-            <div class="card shadow-sm">
+            <div class="card mb-4 shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title text-primary">Listing Details</h5>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span class="text-muted">Listed By:</span>
-                            <strong class="text-end">{{ listing.owner.username }}</strong>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span class="text-muted">Category:</span>
-                            <span class="badge bg-primary">{{ listing.category.name|default:"No Category Listed" }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span class="text-muted">Status:</span>
-                            <span class="badge {% if listing.is_active %}bg-success{% else %}bg-danger{% endif %}">
-                                {% if listing.is_active %}Active{% else %}Ended{% endif %}
-                            </span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span class="text-muted">End Time:</span>
-                            <strong class="text-end">{{ listing.end_time|date:"M j, Y g:i A" }}</strong>
-                        </li>
-                    </ul>
+                    <h3 class="card-title h5 text-primary mb-3">
+                        <i class="bi bi-info-circle"></i> Listing Details
+                    </h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span class="text-muted">Listed By:</span>
+                                    <strong>{{ listing.owner.username }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span class="text-muted">Starting Bid:</span>
+                                    <strong>${{ listing.starting_bid }}</strong>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span class="text-muted">Status:</span>
+                                    <span class="badge {% if listing.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if listing.is_active %}Active{% else %}Ended{% endif %}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span class="text-muted">End Time:</span>
+                                    <strong>{{ listing.end_time|date:"M j, Y g:i A" }}</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Categories -->
+                    {% if listing.category.all %}
+                    <div class="mt-3">
+                        <strong class="text-muted">Categories:</strong>
+                        <div class="mt-1">
+                            {% for category in listing.category.all %}
+                            <span class="badge bg-primary me-1">{{ category.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
-            <div>
-                <form>
-                    <input type="text" placeholder="add comment">
-                    <button type="submit"> add comment</button>
-                </form>
+
+            <!-- Comments Section -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title h5 text-primary mb-3">
+                        <i class="bi bi-chat-text"></i> Comments
+                        <span class="badge bg-secondary">{{ comments|length }}</span>
+                    </h3>
+
+                    <!-- Add Comment Form -->
+                    {% if user.is_authenticated %}
+                    <form method="POST" action="{% url 'add_comment' %}" class="mb-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_id" value="{{ listing.id }}">
+                        <div class="mb-3">
+                            <label for="commentContent" class="form-label">Add a Comment</label>
+                            <textarea name="content" class="form-control" id="commentContent" rows="3" 
+                                      placeholder="Share your thoughts about this listing..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-send"></i> Post Comment
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <a href="{% url 'login' %}" class="alert-link">Login</a> to add a comment.
+                    </div>
+                    {% endif %}
+
+                    <!-- Comments List -->
+                    <div class="comments-section">
+                        {% if comments %}
+                            {% for comment in comments %}
+                            <div class="card mb-3 border-0 bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <strong class="text-primary">{{ comment.author.username }}</strong>
+                                        <small class="text-muted">{{ comment.created_at|date:"M j, Y g:i A" }}</small>
+                                    </div>
+                                    <p class="card-text mb-0">{{ comment.content|linebreaksbr }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-chat-quote" style="font-size: 2rem;"></i>
+                                <p class="mt-2 mb-0">No comments yet. Be the first to comment!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>

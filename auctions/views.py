@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.urls import reverse
 from .forms import ListingForm
-from .models import User, Listing, Category, Bid
+from .models import User, Listing, Category, Bid, Comment
 from django.utils import timezone
 
 
@@ -19,11 +19,12 @@ def index(request):
 
 def get_item(request, id):
     item = Listing.objects.get(id=id)
-    print(item.watchers.contains(request.user))
+    comments = Comment.objects.all().filter(listing = item)
     return render(request, "auctions/item.html", {
         "listing": item,
         'watch_list':item.watchers.contains(request.user) ,
-        'is_owner':request.user == item.owner
+        'is_owner':request.user == item.owner,
+        'comments': comments
     })
 
 def login_view(request):
@@ -129,6 +130,8 @@ def place_bid(request, item_id):
 
             bid = Bid.objects.create(amount = bid_amount, listing = listing, bidder = bidder)
             bid.save()
+            listing.winner = bidder
+            listing.save()
 
             messages.success(request, "Bid placed succeessfully")
             return redirect('item', id=item_id)
@@ -159,8 +162,18 @@ def toogle_watchlist(request):
             item.watchers.add(request.user)
         return redirect('item', id=item_id)
 
-def add_comment():
-    pass
+def add_comment(request):
+    if request.method == 'POST':
+        print(request.POST)
+        content = request.POST.get("content")
+        author = request.user
+        id = request.POST.get('item_id')
+        listing = Listing.objects.get(id=id)
+        comment = Comment.objects.create(content=content, author=author, listing=listing)
+        comment.save()
+
+    return redirect("item", id=id)
+
 
 def close_auction(request):
     if request.method == 'POST':
@@ -170,6 +183,3 @@ def close_auction(request):
             item.end_time = timezone.now()
             item.save()
         return redirect('item', id=item_id)
-
-def winner():
-    pass
