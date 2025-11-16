@@ -22,7 +22,8 @@ def get_item(request, id):
     print(item.watchers.contains(request.user))
     return render(request, "auctions/item.html", {
         "listing": item,
-        'watchList':item.watchers.contains(request.user) ,
+        'watch_list':item.watchers.contains(request.user) ,
+        'is_owner':request.user == item.owner
     })
 
 def login_view(request):
@@ -149,8 +150,8 @@ def watchlist(request):
     })
 
 def toogle_watchlist(request):
-    item_id = request.POST.get("item_id")
     if request.method=='POST':
+        item_id = request.POST.get("item_id")
         item = Listing.objects.get(id=item_id)
         if item.watchers.contains(request.user):
             item.watchers.remove(request.user)
@@ -161,8 +162,14 @@ def toogle_watchlist(request):
 def add_comment():
     pass
 
-def close_auction():
-    pass
+def close_auction(request):
+    if request.method == 'POST':
+        item_id = request.POST.get("item_id")
+        item = Listing.objects.get(id=item_id)
+        if(item.is_active):
+            item.end_time = timezone.now()
+            item.save()
+        return redirect('item', id=item_id)
 
 def winner():
     pass

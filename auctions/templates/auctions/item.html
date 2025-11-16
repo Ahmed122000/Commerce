@@ -13,10 +13,19 @@
                         <i class="bi bi-clock-history"></i> Auction Ended
                     </span>
                     {% endif %}
-                    {% if watchList %}
+                    {% if watch_list %}
                     <span class="badge bg-warning text-dark fs-6">
                         <i class="bi bi-bookmark-check"></i> In Watchlist
                     </span>
+                    {% endif %}
+                    {% if is_owner and listing.is_active %}
+                    <form method="post" action="{% url 'end_auction' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_id" value="{{ listing.id }}">
+                        <button type="submit">
+                            End Auction
+                        </button>
+                    </form>
                     {% endif %}
                 </div>
             </div>
@@ -33,7 +42,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="item_id" value="{{ listing.id }}">
                     <button type="submit">
-                        {% if watchList %}
+                        {% if watch_list %}
                             Remove from Watchlist
                         {% else %}
                             Add to Watchlist
