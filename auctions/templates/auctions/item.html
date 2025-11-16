@@ -28,6 +28,19 @@
                     <img src="{{ listing.image.url }}" class="img-fluid rounded-3 w-100 shadow-sm" alt="{{ listing.title }}" style="max-height: 500px; object-fit: cover;">
                 </div>
             </div>
+            <div>
+                <form method="post" action="{% url 'toggle_watchlist' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="item_id" value="{{ listing.id }}">
+                    <button type="submit">
+                        {% if watchList %}
+                            Remove from Watchlist
+                        {% else %}
+                            Add to Watchlist
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
             {% else %}
             <div class="card mb-4 border-0">
                 <div class="card-body text-center py-5 bg-light rounded-3">
@@ -106,6 +119,12 @@
                         </li>
                     </ul>
                 </div>
+            </div>
+            <div>
+                <form>
+                    <input type="text" placeholder="add comment">
+                    <button type="submit"> add comment</button>
+                </form>
             </div>
         </div>
     </div>
