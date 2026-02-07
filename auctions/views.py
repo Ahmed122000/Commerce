@@ -22,7 +22,7 @@ def get_item(request, id):
     comments = Comment.objects.all().filter(listing = item)
     return render(request, "auctions/item.html", {
         "listing": item,
-        'watch_list':item.watchers.contains(request.user) ,
+        'watch_list':item.watchers.contains(request.user) if request.user and request.user.is_authenticated else False,
         'is_owner':request.user == item.owner,
         'comments': comments
     })
